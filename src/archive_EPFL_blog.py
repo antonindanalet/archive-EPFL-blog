@@ -355,11 +355,11 @@ def save_css(soup, download=True, level=1):
             urlretrieve(url_csv, css_path / css_name)
         # Replace the path of the logo by a local path
         if level == 1:
-            tag_css['src'] = Path('epfl_stuff/') / css_name
+            tag_css['href'] = Path('epfl_stuff/') / css_name
         elif level == 2:
-            tag_css['src'] = Path('../epfl_stuff/') / css_name
+            tag_css['href'] = Path('../epfl_stuff/') / css_name
         elif level == 3:
-            tag_css['src'] = Path('../../epfl_stuff/') / css_name
+            tag_css['href'] = Path('../../epfl_stuff/') / css_name
     return soup
 
 
