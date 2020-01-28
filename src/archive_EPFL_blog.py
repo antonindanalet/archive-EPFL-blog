@@ -295,9 +295,9 @@ def save_the_pictures_of_the_blog(soup, download=True, level=1):
         documents_path = directory_path / 'documents'
         if not documents_path.exists():
             os.mkdir(documents_path)
-        external_documents_path = directory_path / 'external_documents'
-        if not external_documents_path.exists():
-            os.mkdir(external_documents_path)
+        external_images_path = directory_path / 'external_images'
+        if not external_images_path.exists():
+            os.mkdir(external_images_path)
     for tag_image in soup.find_all('img'):
         src_image = str(tag_image['src'])
         name_of_the_image = src_image.split('/')[-1]
@@ -312,15 +312,15 @@ def save_the_pictures_of_the_blog(soup, download=True, level=1):
         elif src_image.startswith('http'):
             if download is True:
                 try:
-                    urlretrieve(src_image, external_documents_path / unquote(name_of_the_image))
+                    urlretrieve(src_image, external_images_path / unquote(name_of_the_image))
                 except urllib.error.HTTPError as e:
                     with open(directory_path / 'warning.txt', 'a') as file:
                         file.write(src_image + ' ' + str(e) + '\n')
                 # Replace the path of the image by a local path
-                tag_image['src'] = Path('external_documents/') / name_of_the_image  # Path for index.html
+                tag_image['src'] = Path('external_images/') / name_of_the_image  # Path for index.html
             else:
                 # Replace the path of the image by a local path, path for articles in folder "article"
-                tag_image['src'] = Path('../external_documents/') / name_of_the_image
+                tag_image['src'] = Path('../external_images/') / name_of_the_image
     return soup
 
 
