@@ -50,16 +50,22 @@ def archive_articles_of_a_page(soup, level=1, download=True):
             # Save the content of the article
             html_article = urlopen(url_article)
             soup_article = BeautifulSoup(html_article, 'lxml')
-            # Change the link to the EPFL logo
-            soup_article = save_logo(soup_article, download=False, level=2)
-            # Change the link to the pictures
-            save_the_pictures_of_the_blog(soup_article, download=False, level=2)
-            # Change the links to the categories
-            archive_categories_of_the_blog(soup_article, download=False, level=2)
-            # Change the link to "home"
-            archive_documents_of_a_page_and_change_links_to_home(soup_article, level=2, download=False)
+            change_links_and_use_internal_ones(soup_article, level=2)
             with open(Path('../archives/' + name_of_the_blog + '/article/' + number_article + '.html'), 'w') as file:
                 file.write(str(soup_article))
+
+
+def change_links_and_use_internal_ones(soup, level):
+    # Change the link to the EPFL logo
+    soup = save_logo(soup, download=False, level=level)
+    # Change the link to the pictures
+    save_the_pictures_of_the_blog(soup, download=False, level=level)
+    # Change the links to the categories
+    archive_categories_of_the_blog(soup, download=False, level=level)
+    # Change the links to CSS
+    save_css(soup, download=False, level=level)
+    # Change the link to "home"
+    archive_documents_of_a_page_and_change_links_to_home(soup, level=level, download=False)
 
 
 def archive_pages_of_the_blog(soup):
@@ -88,6 +94,7 @@ def archive_pages_of_the_blog(soup):
             soup_next = BeautifulSoup(html_next, 'lxml')
             # Save the page
             soup_next = save_logo(soup_next, download=False, level=2)
+            save_css(soup_next, download=False, level=2)
             soup_next = save_the_pictures_of_the_blog(soup_next, level=2)
             # Replace links to comments of the article
             soup_next = replace_links_to_comments(soup_next, level=2)
@@ -126,6 +133,7 @@ def archive_categories_of_the_blog(soup, download=True, level=1):
             html_category = urlopen('https://blogs.epfl.ch/' + str(tag_category['href']))
             soup_category = BeautifulSoup(html_category, 'lxml')
             soup_category = save_logo(soup_category, download=False, level=3)
+            save_css(soup_category, download=False, level=3)
             # Change the links to "home"
             archive_documents_of_a_page_and_change_links_to_home(soup_category, level=3, download=False)
             soup_category = change_links_to_categories(soup_category, level=3)
@@ -190,6 +198,7 @@ def archive_page_of_categories_of_the_blog(soup_category, number_of_category):
             soup_next = BeautifulSoup(html_next, 'lxml')
             # Save the page
             soup_next = save_logo(soup_next, download=False, level=3)
+            save_css(soup_next, download=False, level=3)
             soup_next = save_the_pictures_of_the_blog(soup_next, level=3, download=False)
             # Change the link to "Home"
             archive_documents_of_a_page_and_change_links_to_home(soup_next, level=3, download=False)
