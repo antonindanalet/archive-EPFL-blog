@@ -59,7 +59,7 @@ def change_links_and_use_internal_ones(soup, level):
     # Change the link to the EPFL logo
     soup = save_logo(soup, download=False, level=level)
     # Change the link to the pictures
-    save_pictures_of_the_blog(soup, download=False, level=level)
+    soup = save_pictures_of_the_blog(soup, download=False, level=level)
     # Change the links to CSS
     save_css(soup, download=False, level=level)
     # Change the link to "home"
