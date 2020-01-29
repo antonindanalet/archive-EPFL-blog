@@ -59,13 +59,13 @@ def change_links_and_use_internal_ones(soup, level):
     # Change the link to the EPFL logo
     soup = save_logo(soup, download=False, level=level)
     # Change the link to the pictures
-    save_the_pictures_of_the_blog(soup, download=False, level=level)
-    # Change the links to the categories
-    archive_categories_of_the_blog(soup, download=False, level=level)
+    save_pictures_of_the_blog(soup, download=False, level=level)
     # Change the links to CSS
     save_css(soup, download=False, level=level)
     # Change the link to "home"
     archive_documents_of_a_page_and_change_links_to_home(soup, level=level, download=False)
+    # Change the links to the categories
+    change_links_to_categories(soup, level=level)
 
 
 def archive_pages_of_the_blog(soup):
@@ -92,14 +92,9 @@ def archive_pages_of_the_blog(soup):
             url_of_the_next_page = 'http://blogs.epfl.ch' + url_of_the_next_page
             html_next = urlopen(url_of_the_next_page)
             soup_next = BeautifulSoup(html_next, 'lxml')
-            # Save the page
-            soup_next = save_logo(soup_next, download=False, level=2)
-            save_css(soup_next, download=False, level=2)
-            soup_next = save_the_pictures_of_the_blog(soup_next, level=2)
+            change_links_and_use_internal_ones(soup_next, level=2)
             # Replace links to comments of the article
             soup_next = replace_links_to_comments(soup_next, level=2)
-            # Replace links to categories
-            soup_next = change_links_to_categories(soup_next, level=2)
             # Get the next page (from page n to page n+1)
             tag_next = soup_next.find('a', {'id': 'linkNextPage'})
             try:
@@ -110,13 +105,12 @@ def archive_pages_of_the_blog(soup):
             soup_next = change_page_links(soup_next, level=2)
             # Save all articles of this page
             archive_articles_of_a_page(soup_next, level=2)
-            archive_documents_of_a_page_and_change_links_to_home(soup_next, level=2)
             # Save the page
             with open(Path('../archives/' + name_of_the_blog + '/pages/' + str(page_number) + '.html'), 'w') as file:
                 file.write(str(soup_next))
 
 
-def archive_categories_of_the_blog(soup, download=True, level=1):
+def archive_categories_of_the_blog(soup):
     # Create the directory for the pages
     categories_path = directory_path / 'category'
     if not categories_path.exists():
@@ -125,48 +119,40 @@ def archive_categories_of_the_blog(soup, download=True, level=1):
     for tag_category in tag_category_list.find_all('a'):
         # Create folder for the category
         number_of_category = tag_category['href'].split('/')[-1]
-        if download is True:
-            category_path = directory_path / 'category' / number_of_category
-            if not category_path.exists():
-                os.mkdir(category_path)
-            # Save the landing page of the category
-            html_category = urlopen('https://blogs.epfl.ch/' + str(tag_category['href']))
-            soup_category = BeautifulSoup(html_category, 'lxml')
-            soup_category = save_logo(soup_category, download=False, level=3)
-            save_css(soup_category, download=False, level=3)
-            # Change the links to "home"
-            archive_documents_of_a_page_and_change_links_to_home(soup_category, level=3, download=False)
-            soup_category = change_links_to_categories(soup_category, level=3)
-            # Replace lint to articles
-            archive_articles_of_a_page(soup_category, level=3, download=False)
-            # Replace links to comments of the article
-            soup_category = replace_links_to_comments(soup_category, level=3)
-            # Save other pages of the category
-            archive_page_of_categories_of_the_blog(soup_category, number_of_category)
-            # Look if there is a "next page"
-            tag_next = soup_category.find('a', {'id': 'linkNextPage'})
-            if tag_next is not None:  # If there is a second page, change links to other pages of the category
-                soup_category = change_page_links(soup_category, number_of_category=number_of_category)
-            # Save the landing page of the category
-            path_to_categories = Path('../archives/' + name_of_the_blog + '/category/' + number_of_category)
-            with open(path_to_categories / 'index.html', 'w') as file:
-                file.write(str(soup_category))
+        category_path = directory_path / 'category' / number_of_category
+        if not category_path.exists():
+            os.mkdir(category_path)
+        # Save the landing page of the category
+        html_category = urlopen('https://blogs.epfl.ch/' + str(tag_category['href']))
+        soup_category = BeautifulSoup(html_category, 'lxml')
+        change_links_and_use_internal_ones(soup_category, level=3)
+        # Replace links to articles
+        archive_articles_of_a_page(soup_category, level=3, download=False)
+        # Replace links to comments of the article
+        soup_category = replace_links_to_comments(soup_category, level=3)
+        # Save other pages of the category
+        archive_page_of_categories_of_the_blog(soup_category, number_of_category)
+        # Look if there is a "next page"
+        tag_next = soup_category.find('a', {'id': 'linkNextPage'})
+        if tag_next is not None:  # If there is a second page, change links to other pages of the category
+            soup_category = change_page_links(soup_category, number_of_category=number_of_category)
+        # Save the landing page of the category
+        path_to_categories = Path('../archives/' + name_of_the_blog + '/category/' + number_of_category)
+        with open(path_to_categories / 'index.html', 'w') as file:
+            file.write(str(soup_category))
         # Change links for the category
-        if level == 1:
-            tag_category['href'] = Path('category/' + number_of_category + '/index.html')
-        elif level == 2:
-            tag_category['href'] = Path('../category/' + number_of_category + '/index.html')
+        #tag_category['href'] = Path('category/' + number_of_category + '/index.html')
     return soup
 
 
 def archive_landing_page(soup):
     soup = save_logo(soup)  # Locally save the EPFL logo
-    soup = save_the_pictures_of_the_blog(soup)
+    soup = save_pictures_of_the_blog(soup)
     soup = save_css(soup)  # Locally save the 2 CSS files
     # Replace page links
     soup = change_page_links(soup)
     # Replace internet links by local links for "comments" link (link to an article, but the "comments" part)
-
+    soup = change_links_to_categories(soup, level=1)
     # Replace "home" link by local link (and all links to landing page) and downloads documents hosted on the blog
     archive_documents_of_a_page_and_change_links_to_home(soup)
     # Save other elements
@@ -199,7 +185,7 @@ def archive_page_of_categories_of_the_blog(soup_category, number_of_category):
             # Save the page
             soup_next = save_logo(soup_next, download=False, level=3)
             save_css(soup_next, download=False, level=3)
-            soup_next = save_the_pictures_of_the_blog(soup_next, level=3, download=False)
+            soup_next = save_pictures_of_the_blog(soup_next, level=3, download=False)
             # Change the link to "Home"
             archive_documents_of_a_page_and_change_links_to_home(soup_next, level=3, download=False)
             # Replace lint to articles
@@ -299,7 +285,7 @@ def replace_links_to_comments(soup, level=1):
     return soup
 
 
-def save_the_pictures_of_the_blog(soup, download=True, level=1):
+def save_pictures_of_the_blog(soup, download=True, level=1):
     if download is True:
         documents_path = directory_path / 'documents'
         if not documents_path.exists():
