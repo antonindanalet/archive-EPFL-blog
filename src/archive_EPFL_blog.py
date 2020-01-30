@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 import os
 from pathlib import Path
 
-name_of_the_blog = 'antonin.danalet'  # Make the name of the blog a global variable
+name_of_the_blog = 'tavie'  # Make the name of the blog a global variable
 
 # Create the directory for the archive
 directory_path = Path('../archives/' + name_of_the_blog)
@@ -182,18 +182,11 @@ def archive_page_of_categories_of_the_blog(soup_category, number_of_category):
             url_next = 'http://blogs.epfl.ch' + url_next
             html_next = urlopen(url_next)
             soup_next = BeautifulSoup(html_next, 'lxml')
-            # Save the page
-            soup_next = save_logo(soup_next, download=False, level=3)
-            save_css(soup_next, download=False, level=3)
-            soup_next = save_pictures_of_the_blog(soup_next, level=3, download=False)
-            # Change the link to "Home"
-            archive_documents_of_a_page_and_change_links_to_home(soup_next, level=3, download=False)
+            change_links_and_use_internal_ones(soup_next, level=3)
             # Replace lint to articles
             archive_articles_of_a_page(soup_next, level=3, download=False)
             # Replace links to comments of the article
             soup_next = replace_links_to_comments(soup_next, level=3)
-            # Replace links to categories
-            soup_next = change_links_to_categories(soup_next, level=3)
             # Get the next page (from page n to page n+1)
             tag_next = soup_next.find('a', {'id': 'linkNextPage'})
             try:
@@ -294,28 +287,34 @@ def save_pictures_of_the_blog(soup, download=True, level=1):
         if not external_images_path.exists():
             os.mkdir(external_images_path)
     for tag_image in soup.find_all('img'):
-        src_image = str(tag_image['src'])
-        name_of_the_image = src_image.split('/')[-1]
-        if src_image.startswith('https://blogs.epfl.ch/' + name_of_the_blog + '/documents/'):
-            if download is True:
-                urlretrieve(src_image, documents_path / unquote(name_of_the_image))
-            # Replace the path of the image by a local path
-            if level == 1:
-                tag_image['src'] = Path('documents/') / name_of_the_image  # Path for index.html
-            elif level == 2:
-                tag_image['src'] = Path('../documents/') / name_of_the_image  # Path for articles in folder "article"
-        elif src_image.startswith('http'):
-            if download is True:
-                try:
-                    urlretrieve(src_image, external_images_path / unquote(name_of_the_image))
-                except urllib.error.HTTPError as e:
-                    with open(directory_path / 'warning.txt', 'a') as file:
-                        file.write(src_image + ' ' + str(e) + '\n')
+        if tag_image.has_attr('src'):
+            src_image = str(tag_image['src'])
+            name_of_the_image = src_image.split('/')[-1]
+            if src_image.startswith('https://blogs.epfl.ch/' + name_of_the_blog + '/documents/'):
+                if download is True:
+                    urlretrieve(src_image, documents_path / unquote(name_of_the_image))
                 # Replace the path of the image by a local path
-                tag_image['src'] = Path('external_images/') / name_of_the_image  # Path for index.html
-            else:
-                # Replace the path of the image by a local path, path for articles in folder "article"
-                tag_image['src'] = Path('../external_images/') / name_of_the_image
+                if level == 1:
+                    tag_image['src'] = Path('documents/') / name_of_the_image  # Path for index.html
+                elif level == 2:
+                    tag_image['src'] = Path('../documents/') / name_of_the_image  # Path for articles in folder "article"
+                elif level == 3:
+                    tag_image['src'] = Path('../../documents/') / name_of_the_image  # Path for articles in folder "article"
+            elif src_image.startswith('http'):
+                if download is True:
+                    try:
+                        urlretrieve(src_image, external_images_path / unquote(name_of_the_image))
+                    except urllib.error.HTTPError as e:
+                        with open(directory_path / 'warning.txt', 'a') as file:
+                            file.write(src_image + ' ' + str(e) + '\n')
+                    except urllib.error.URLError as e:
+                        with open(directory_path / 'warning.txt', 'a') as file:
+                            file.write(src_image + ' ' + str(e) + '\n')
+                    # Replace the path of the image by a local path
+                    tag_image['src'] = Path('external_images/') / name_of_the_image  # Path for index.html
+                else:
+                    # Replace the path of the image by a local path, path for articles in folder "article"
+                    tag_image['src'] = Path('../external_images/') / name_of_the_image
     return soup
 
 
