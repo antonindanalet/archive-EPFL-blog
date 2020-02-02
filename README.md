@@ -9,6 +9,3 @@ To run the code itself, you need python 3 and beautifulsoup4 (bs4).
 
 ### Run the code
 Just enter the name of the blog you want to archive in line 8 (currently "tavie") and run the code.
-
-## Known issues
-When archiving tavie, after around 77 pages and 780 articles saved, opening the page containing an article (`html_article = urlopen(url_article)`) is not possible anymore and the following error happens: `urllib.error.URLError: <urlopen error [Errno 61] Connection refused>`
