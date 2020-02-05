@@ -50,7 +50,16 @@ def archive_articles_of_a_page(soup, level=1, download=True):
             # Save the content of the article
             html_article = urlopen(url_article)
             soup_article = BeautifulSoup(html_article, 'lxml')
-            change_links_and_use_internal_ones(soup_article, level=2)
+            # Change the link to the EPFL logo
+            soup_article = save_logo(soup_article, level=2)
+            # Change the link to the pictures
+            soup_article = save_pictures_of_the_blog(soup_article, level=2)
+            # Change the links to CSS
+            save_css(soup_article, level=2)
+            # Change the link to "home"
+            archive_documents_of_a_page_and_change_links_to_home(soup_article, level=2)
+            # Change the links to the categories
+            change_links_to_categories(soup_article, level=2)
             with open(Path('../archives/' + name_of_the_blog + '/article/' + number_article + '.html'), 'w') as file:
                 file.write(str(soup_article))
 
@@ -312,6 +321,12 @@ def save_pictures_of_the_blog(soup, download=True, level=1):
                     except urllib.error.URLError as e:
                         with open(directory_path / 'warning.txt', 'a') as file:
                             file.write(src_image + ' ' + str(e) + '\n')
+                    except OSError as e:
+                        if e.errno == 63:  # Handling OSError: [Errno 36] File name too long
+                            file.write(src_image + ' ' + str(e) + ' saved as ' + name_of_the_image[:25] + '\n')
+                            urlretrieve(src_image, external_images_path / unquote(name_of_the_image[:25]))
+                        else:
+                            raise
                     # Replace the path of the image by a local path
                     tag_image['src'] = Path('external_images/') / name_of_the_image  # Path for index.html
                 else:
