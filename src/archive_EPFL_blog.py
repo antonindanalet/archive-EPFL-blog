@@ -84,7 +84,9 @@ def archive_pages_of_the_blog(soup):
     else:
         url_of_the_next_page = tag_next['href']
     while next_pages_exists:
-        if tag_next is None:  # Test if there is a page n+1 when there is a least a page 2
+        # Test if there is a page n+1 when there is a least a page 2
+        # and limits the number of archived pages to 70 in order to avoid a "connection refused"
+        if tag_next is None or page_number > 70:
             next_pages_exists = False
         else:
             page_number += 1
